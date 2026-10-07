@@ -83,8 +83,8 @@ fun Ticket(
 ) {
     val inner: @Composable () -> Unit = {
         Row(Modifier.height(IntrinsicSize.Min)) {
-            Box(Modifier.width(6.dp).fillMaxHeight().background(accent))
-            Column(Modifier.weight(1f).padding(16.dp), content = content)
+            Box(Modifier.padding(start = 10.dp, top = 14.dp, bottom = 14.dp).width(4.dp).fillMaxHeight().background(accent, androidx.compose.foundation.shape.CircleShape))
+            Column(Modifier.weight(1f).padding(start = 12.dp, top = 16.dp, end = 16.dp, bottom = 16.dp), content = content)
             if (stub != null) {
                 VerticalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                 Column(Modifier.width(92.dp).fillMaxHeight().padding(vertical = 14.dp, horizontal = 8.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center, content = stub)
