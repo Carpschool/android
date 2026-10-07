@@ -94,7 +94,7 @@ fun RideScreen(id: String, me: Me, nav: NavController) {
                         Text(pin ?: "••••", fontFamily = Mono, fontWeight = FontWeight.Bold, fontSize = 48.sp, letterSpacing = 10.sp, modifier = Modifier.padding(vertical = 8.dp))
                         Text(if (pin == null) "Show this to your driver when you get in. We don't store it, so get a fresh one when you need it." else "Tell your driver this code at pickup.",
                             style = MaterialTheme.typography.bodySmall, textAlign = TextAlign.Center, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        if (mine?.status != "boarded" && mine?.status != "dropped") Button(onClick = { scope.toastingLaunch(toast) {
+                        if (mine?.status != "boarded" && mine?.status != "completed") Button(onClick = { scope.toastingLaunch(toast) {
                             pin = (Carp.api("/carpools/$id/pin", "POST") as JsonObject)["pin"]!!.jsonPrimitive.content } }, Modifier.padding(top = 12.dp)) { Text(if (pin == null) "Show PIN" else "New PIN") }
                     }
                 }
@@ -106,7 +106,7 @@ fun RideScreen(id: String, me: Me, nav: NavController) {
                     Spacer(Modifier.weight(1f)); SafetyMenu(c.owner, "driver")
                 }
             }
-            if (mine != null && mine.status != "boarded" && mine.status != "dropped") item {
+            if (mine != null && mine.status != "boarded" && mine.status != "completed") item {
                 OutlinedButton(onClick = { leave = mine.rider }, Modifier.fillMaxWidth(), colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error)) { Text("Leave carpool") }
             }
         }
@@ -118,7 +118,7 @@ fun RideScreen(id: String, me: Me, nav: NavController) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Column(Modifier.weight(1f)) {
                             Text("Rider ${shortId(p.rider)}", style = MaterialTheme.typography.titleMedium)
-                            StatusChip(p.status.ifBlank { "waiting" }.replaceFirstChar { it.uppercase() }, if (p.status == "boarded") "success" else if (p.status == "dropped") "default" else "warn")
+                            StatusChip(p.status.ifBlank { "waiting" }.replaceFirstChar { it.uppercase() }, if (p.status == "boarded") "success" else if (p.status == "completed") "default" else "warn")
                         }
                         SafetyMenu(p.rider, "rider")
                     }
@@ -128,11 +128,12 @@ fun RideScreen(id: String, me: Me, nav: NavController) {
                                 val (loc, approx) = Geo.snapshot(ctx, p.pickup)
                                 Carp.api("/carpools/$id/dropoff", "POST", buildJsonObject { put("rider", p.rider); put("location", Carp.enc(loc)) })
                                 toast(if (approx) "Dropped off (approximate location)" else "Dropped off"); q.refresh() } }) { Text("Drop off") }
-                            "dropped" -> Text("Trip complete", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                            else -> {
+                            "completed" -> Text("Trip complete", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            "locked" -> {
                                 Button(onClick = { board = p }) { Icon(Icons.Outlined.Pin, null); Spacer(Modifier.width(6.dp)); Text("Board") }
                                 TextButton(onClick = { leave = p.rider }) { Text("Remove", color = MaterialTheme.colorScheme.error) }
                             }
+                            else -> {}
                         }
                     }
                 }
