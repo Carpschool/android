@@ -1,5 +1,6 @@
 package ca.carpschool.ui.screens
 
+import kotlinx.coroutines.async
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -74,15 +75,22 @@ fun ChatScreen(id: String, me: Me, nav: NavController) {
     var accept by remember { mutableStateOf<Proposal?>(null) }
     val sock = remember(id) { ChatSocket(id) }
     val live by sock.live.collectAsState()
+    var history by remember(id) { mutableStateOf(false) }
     var lockedDrive by remember { mutableStateOf<String?>(null) }
 
     suspend fun reload() {
         runCatching {
-            val m = Carp.get<List<Message>>("/negotiations/$id/messages"); messages.clear(); messages.addAll(m)
-            val p = Carp.get<List<Proposal>>("/negotiations/$id/proposals"); proposals.clear(); proposals.addAll(p)
-        }.onFailure { toast(errText(it)) }
+            kotlinx.coroutines.coroutineScope {
+                val m = async { Carp.get<List<Message>>("/negotiations/$id/messages") }
+                val p = async { Carp.get<List<Proposal>>("/negotiations/$id/proposals") }
+                val mv = m.await(); val pv = p.await()
+                messages.clear(); messages.addAll(mv); proposals.clear(); proposals.addAll(pv)
+            }
+        }.onFailure { if (it !is kotlinx.coroutines.CancellationException) toast(errText(it)) }
+        history = true
     }
-    LaunchedEffect(id) { reload(); runCatching { sock.connect() } }
+    // Socket and history load in parallel; the socket used to wait for both REST calls first.
+    LaunchedEffect(id) { launch { runCatching { sock.connect() } }; reload() }
     LaunchedEffect(sock) {
         sock.events.collect { e ->
             when (e) {
@@ -137,7 +145,8 @@ fun ChatScreen(id: String, me: Me, nav: NavController) {
                     TextButton(onClick = { nav.navigate("ride/${lockedDrive ?: n?.driveId}") }) { Text("Open ride") }
                 }
             }
-            if (items.isEmpty()) item { Text("Say hi and propose a pickup spot and time. Either of you can accept the other's proposal.", Modifier.padding(24.dp), color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium) }
+            if (!history || n == null) item { Skeleton(3, 64) }
+            else if (items.isEmpty()) item { Text("Say hi and propose a pickup spot and time. Either of you can accept the other's proposal.", Modifier.padding(24.dp), color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium) }
             items(items, key = { it.key }) { it ->
                 when (it) {
                     is MsgItem -> Bubble(it.m, it.m.author == myId)
