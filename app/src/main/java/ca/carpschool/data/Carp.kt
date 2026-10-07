@@ -1,5 +1,6 @@
 package ca.carpschool.data
 
+import kotlinx.coroutines.launch
 import android.content.Context
 import android.content.SharedPreferences
 import ca.carpschool.BuildConfig
@@ -63,7 +64,8 @@ object Carp {
         _schoolCode.value = s?.schoolCode
         _me.value = Load.Loading
         _meta.value = null
-        if (s != null) { loadMeta(s); refreshMe() }
+        // Run on an app-wide scope: the school picker that called us leaves composition as soon as code changes.
+        if (s != null) appScope.launch { loadMeta(s); refreshMe() }
     }
 
     fun signedOut() { tok = null; _me.value = Load.Loading }
@@ -101,6 +103,8 @@ object Carp {
 
     suspend fun centralApi(path: String, method: String = "GET", body: JsonElement? = null) = Net.call(central + path, method, body, clerkJwt())
 
+    private val appScope = kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.SupervisorJob() + kotlinx.coroutines.Dispatchers.Main.immediate)
+
     suspend fun refreshMe(): Me? {
         if (school == null) return null
         _me.value = Load.Loading
@@ -108,6 +112,7 @@ object Carp {
             val j = api("/me")
             val m = if (j == null || j is JsonNull) null else Net.json.decodeFromJsonElement<Me>(j)
             _me.value = Load.Ok(m); m
+        } catch (e: kotlinx.coroutines.CancellationException) { throw e
         } catch (e: Exception) { _me.value = Load.Err(e.message ?: "Couldn't load your profile"); null }
     }
 
