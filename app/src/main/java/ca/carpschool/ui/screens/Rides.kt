@@ -12,6 +12,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -160,7 +161,10 @@ private fun BoardDialog(onDismiss: () -> Unit, onSubmit: suspend (String) -> Str
         text = { Column {
             Text("Ask the rider for the 4 digit code on their phone.")
             Spacer(Modifier.height(12.dp))
-            OutlinedTextField(code, { code = it.filter(Char::isDigit).take(4); err = null }, Modifier.fillMaxWidth(), singleLine = true, isError = err != null,
+            val focus = remember { androidx.compose.ui.focus.FocusRequester() }
+            LaunchedEffect(Unit) { focus.requestFocus() }
+            OutlinedTextField(code, { code = it.filter(Char::isDigit).take(4); err = null }, Modifier.fillMaxWidth().focusRequester(focus), singleLine = true, isError = err != null,
+                placeholder = { Text("• • • •", Modifier.fillMaxWidth(), style = MaterialTheme.typography.headlineMedium, textAlign = TextAlign.Center, color = MaterialTheme.colorScheme.outline) },
                 supportingText = { err?.let { Text(it) } },
                 textStyle = MaterialTheme.typography.headlineMedium.copy(fontFamily = Mono, letterSpacing = 12.sp, textAlign = TextAlign.Center),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword))

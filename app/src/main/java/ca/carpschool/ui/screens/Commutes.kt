@@ -1,5 +1,10 @@
 package ca.carpschool.ui.screens
 
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
@@ -149,7 +154,17 @@ fun NewCommuteScreen(me: Me, nav: NavController) {
                 SegmentedButton(!repeat, { repeat = false }, SegmentedButtonDefaults.itemShape(1, 2)) { Text("One day") }
             }
             if (repeat) Row(horizontalArrangement = Arrangement.spacedBy(4.dp), modifier = Modifier.fillMaxWidth()) {
-                DAYS.forEachIndexed { i, d -> FilterChip(i in days, { days = if (i in days) days - i else days + i }, { Text(d.take(2)) }, Modifier.weight(1f)) }
+                DAYS.forEachIndexed { i, d ->
+                    val on = i in days
+                    val cs = MaterialTheme.colorScheme
+                    Box(Modifier.weight(1f).height(44.dp).clip(RoundedCornerShape(12.dp))
+                        .background(if (on) cs.primary else cs.surfaceContainerLowest)
+                        .border(1.dp, if (on) cs.primary else cs.outlineVariant, RoundedCornerShape(12.dp))
+                        .selectable(on, role = androidx.compose.ui.semantics.Role.Checkbox) { days = if (on) days - i else days + i },
+                        contentAlignment = Alignment.Center) {
+                        Text(d.take(2), style = MaterialTheme.typography.labelLarge, color = if (on) cs.onPrimary else cs.onSurface, maxLines = 1, softWrap = false)
+                    }
+                }
             } else DateField(date) { date = it }
         }
         item {
