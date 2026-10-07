@@ -1,6 +1,7 @@
 package ca.carpschool.ui.screens
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.animateFloat
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -55,9 +56,10 @@ fun LandingScreen() {
             }
         } else {
             Box(Modifier.fillMaxSize().background(Ink)) {
+                DarkSystemBars()
                 Column(Modifier.fillMaxSize().systemBarsPadding().padding(28.dp)) {
                     Wordmark(Paper)
-                    Spacer(Modifier.weight(1f))
+                    RouteHero(Modifier.weight(1f).fillMaxWidth())
                     Text("TO SCHOOL · HOME · TOGETHER", style = Overline, color = Amber, modifier = Modifier.rise(0))
                     Spacer(Modifier.height(12.dp))
                     Text("Share the ride\nwith classmates\nwho live nearby.", style = MaterialTheme.typography.displaySmall, color = Paper, modifier = Modifier.rise(1))
@@ -233,5 +235,41 @@ fun RoleScreen() {
         }
         try { Carp.api("/profile", "POST", body); Carp.refreshMe() } catch (e: Exception) { err = errText(e) }
         busy = false; confirm = false
+    }
+}
+
+
+/** Forces light status/nav icons while this screen is shown (landing is always ink). */
+@Composable
+fun DarkSystemBars() {
+    val view = androidx.compose.ui.platform.LocalView.current
+    val dark = androidx.compose.foundation.isSystemInDarkTheme()
+    DisposableEffect(Unit) {
+        val w = (view.context as android.app.Activity).window
+        val c = androidx.core.view.WindowCompat.getInsetsController(w, view)
+        c.isAppearanceLightStatusBars = false; c.isAppearanceLightNavigationBars = false
+        onDispose { c.isAppearanceLightStatusBars = !dark; c.isAppearanceLightNavigationBars = !dark }
+    }
+}
+
+/** Quiet illustration: a dashed road from home to school with two stops. */
+@Composable
+fun RouteHero(modifier: Modifier) {
+    val t = androidx.compose.animation.core.rememberInfiniteTransition(label = "hero")
+    val phase by t.animateFloat(0f, 40f, androidx.compose.animation.core.infiniteRepeatable(androidx.compose.animation.core.tween(2400, easing = androidx.compose.animation.core.LinearEasing)), label = "dash")
+    androidx.compose.foundation.Canvas(modifier.padding(vertical = 24.dp)) {
+        val w = size.width; val h = size.height
+        val p = androidx.compose.ui.graphics.Path().apply {
+            moveTo(w * 0.08f, h * 0.82f)
+            cubicTo(w * 0.45f, h * 0.95f, w * 0.15f, h * 0.35f, w * 0.55f, h * 0.42f)
+            cubicTo(w * 0.85f, h * 0.48f, w * 0.7f, h * 0.12f, w * 0.9f, h * 0.15f)
+        }
+        drawPath(p, Paper.copy(alpha = 0.10f), style = androidx.compose.ui.graphics.drawscope.Stroke(width = 18.dp.toPx(), cap = androidx.compose.ui.graphics.StrokeCap.Round))
+        drawPath(p, Amber, style = androidx.compose.ui.graphics.drawscope.Stroke(width = 3.dp.toPx(), cap = androidx.compose.ui.graphics.StrokeCap.Round,
+            pathEffect = androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(14.dp.toPx(), 12.dp.toPx()), -phase.dp.toPx())))
+        drawCircle(Paper, 7.dp.toPx(), androidx.compose.ui.geometry.Offset(w * 0.08f, h * 0.82f))
+        drawCircle(Amber, 5.dp.toPx(), androidx.compose.ui.geometry.Offset(w * 0.55f, h * 0.42f))
+        drawCircle(Amber, 11.dp.toPx(), androidx.compose.ui.geometry.Offset(w * 0.9f, h * 0.15f))
+        drawCircle(Ink, 5.dp.toPx(), androidx.compose.ui.geometry.Offset(w * 0.9f, h * 0.15f))
     }
 }
