@@ -1,5 +1,6 @@
 package ca.carpschool.data
 
+import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import android.content.Context
 import android.content.SharedPreferences
@@ -107,7 +108,13 @@ object Carp {
 
     suspend fun refreshMe(): Me? {
         if (school == null) return null
-        _me.value = Load.Loading
+        // Keep showing the current profile while refreshing, and run on appScope: callers (onboarding
+        // steps) leave composition once /me changes, which used to cancel this mid-flight and strand Loading.
+        if (_me.value !is Load.Ok) _me.value = Load.Loading
+        return appScope.async { fetchMe() }.await()
+    }
+
+    private suspend fun fetchMe(): Me? {
         return try {
             val j = api("/me")
             val m = if (j == null || j is JsonNull) null else Net.json.decodeFromJsonElement<Me>(j)
