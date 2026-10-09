@@ -21,8 +21,8 @@ import androidx.compose.ui.draw.clip
 
 @Composable
 fun Screen(content: androidx.compose.foundation.lazy.LazyListScope.() -> Unit) =
-    LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 12.dp + WindowInsets.statusBars.asPaddingValues().calculateTopPadding(), bottom = 28.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp), content = content)
+    LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 24.dp + WindowInsets.statusBars.asPaddingValues().calculateTopPadding(), bottom = 28.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp), content = content)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -30,7 +30,7 @@ fun BackScreen(title: String, nav: NavController, actions: @Composable RowScope.
     Scaffold(topBar = {
         TopAppBar(title = { Text(title) }, navigationIcon = { IconButton(onClick = { nav.popBackStack() }) { Icon(Icons.AutoMirrored.Outlined.ArrowBack, "Back") } }, actions = actions)
     }) { p ->
-        LazyColumn(Modifier.fillMaxSize().padding(top = p.calculateTopPadding()).imePadding(), contentPadding = PaddingValues(20.dp, 8.dp, 20.dp, 28.dp), verticalArrangement = Arrangement.spacedBy(12.dp), content = content)
+        LazyColumn(Modifier.fillMaxSize().padding(top = p.calculateTopPadding()).imePadding(), contentPadding = PaddingValues(20.dp, 8.dp, 20.dp, 28.dp), verticalArrangement = Arrangement.spacedBy(16.dp), content = content)
     }
 }
 
@@ -53,7 +53,7 @@ fun CommuteTicket(c: Commute, homes: List<Home>, driver: Boolean, i: Int, onClic
             if (today) StatusChip("Today", "warn")
             if (c.status == "locked") StatusChip("Matched", "success")
         }
-        Text(if (c.direction == "to-school") "${home?.label ?: "Home"} to school" else "School to ${home?.label ?: "home"}", style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(top = 4.dp))
+        Text(if (c.direction == "to-school") "${home?.label ?: "Home"} to school" else "School to ${home?.label ?: "home"}", style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(top = 8.dp))
         Text("${schedule(c)} · ${c.startTime}–${c.endTime}", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
@@ -81,12 +81,12 @@ fun HomeScreen(me: Me, nav: NavController) {
         }
         item {
             ElevatedCard(onClick = { if (h.isNullOrEmpty()) nav.navigate("homes") else nav.navigate("new") }, colors = CardDefaults.elevatedCardColors(containerColor = Ink, contentColor = Paper), modifier = Modifier.fillMaxWidth().rise(0)) {
-                Row(Modifier.padding(20.dp), verticalAlignment = Alignment.CenterVertically) {
+                Row(Modifier.padding(24.dp), verticalAlignment = Alignment.CenterVertically) {
                     Column(Modifier.weight(1f)) {
                         Text(if (me.isDriver) "Offer a drive" else "Request a ride", style = MaterialTheme.typography.titleLarge)
-                        Text(if (me.isDriver) "Share your route and empty seats" else "Find a classmate heading your way", style = MaterialTheme.typography.bodyMedium, color = Paper.copy(alpha = .7f))
+                        Text(if (me.isDriver) "Share your route and empty seats" else "Find a classmate heading your way", style = MaterialTheme.typography.bodyMedium, color = Paper.copy(alpha = .85f), modifier = Modifier.padding(top = 6.dp))
                     }
-                    FilledIconButton(onClick = { if (h.isNullOrEmpty()) nav.navigate("homes") else nav.navigate("new") }, colors = IconButtonDefaults.filledIconButtonColors(containerColor = Amber, contentColor = Ink)) { Icon(Icons.Outlined.Add, null) }
+                    FilledIconButton(onClick = { if (h.isNullOrEmpty()) nav.navigate("homes") else nav.navigate("new") }, colors = IconButtonDefaults.filledIconButtonColors(containerColor = Amber, contentColor = Ink)) { Icon(Icons.Outlined.Add, if (me.isDriver) "Offer a drive" else "Request a ride") }
                 }
             }
         }

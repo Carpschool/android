@@ -50,7 +50,7 @@ fun <T> rememberQuery(vararg keys: Any?, pollMs: Long = 0, enabled: Boolean = tr
 
 @Composable
 fun SectionTitle(text: String, modifier: Modifier = Modifier, action: @Composable (() -> Unit)? = null) {
-    Row(modifier.fillMaxWidth().padding(bottom = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+    Row(modifier.fillMaxWidth().padding(bottom = 4.dp), verticalAlignment = Alignment.CenterVertically) {
         Text(text, style = MaterialTheme.typography.titleLarge, modifier = Modifier.weight(1f))
         action?.invoke()
     }
@@ -62,17 +62,17 @@ fun Kicker(text: String, modifier: Modifier = Modifier, color: Color = MaterialT
 
 @Composable
 fun PageHead(kicker: String?, title: String, sub: String? = null, action: @Composable (() -> Unit)? = null) {
-    Row(Modifier.fillMaxWidth().padding(bottom = 20.dp), verticalAlignment = Alignment.Bottom) {
+    Row(Modifier.fillMaxWidth().padding(bottom = 24.dp), verticalAlignment = Alignment.Bottom) {
         Column(Modifier.weight(1f)) {
-            if (kicker != null) Kicker(kicker)
+            if (kicker != null) Kicker(kicker, Modifier.padding(bottom = 6.dp))
             Text(title, style = MaterialTheme.typography.headlineMedium)
-            if (sub != null) Text(sub, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 2.dp))
+            if (sub != null) Text(sub, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 8.dp))
         }
         action?.invoke()
     }
 }
 
-/** Ticket-style card with an accent strip and optional stub column. */
+/** Quiet, grouped route surface; the accent is a status marker, not decoration. */
 @Composable
 fun Ticket(
     modifier: Modifier = Modifier,
@@ -83,23 +83,23 @@ fun Ticket(
 ) {
     val inner: @Composable () -> Unit = {
         Row(Modifier.height(IntrinsicSize.Min)) {
-            Box(Modifier.padding(start = 10.dp, top = 14.dp, bottom = 14.dp).width(4.dp).fillMaxHeight().background(accent, androidx.compose.foundation.shape.CircleShape))
-            Column(Modifier.weight(1f).padding(start = 12.dp, top = 16.dp, end = 16.dp, bottom = 16.dp), content = content)
+            Box(Modifier.padding(start = 20.dp, top = 24.dp).size(6.dp).background(accent, CircleShape))
+            Column(Modifier.weight(1f).padding(start = 12.dp, top = 20.dp, end = 16.dp, bottom = 20.dp), content = content)
             if (stub != null) {
-                VerticalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                VerticalDivider(Modifier.padding(vertical = 20.dp), color = MaterialTheme.colorScheme.outlineVariant)
                 Column(Modifier.width(92.dp).fillMaxHeight().padding(vertical = 14.dp, horizontal = 8.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center, content = stub)
             }
         }
     }
     val colors = CardDefaults.outlinedCardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLowest)
-    if (onClick != null) OutlinedCard(onClick = onClick, modifier = modifier.fillMaxWidth(), shape = RoundedCornerShape(20.dp), colors = colors) { inner() }
-    else OutlinedCard(modifier = modifier.fillMaxWidth(), shape = RoundedCornerShape(20.dp), colors = colors) { inner() }
+    if (onClick != null) OutlinedCard(onClick = onClick, modifier = modifier.fillMaxWidth(), shape = MaterialTheme.shapes.large, border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f)), colors = colors) { inner() }
+    else OutlinedCard(modifier = modifier.fillMaxWidth(), shape = MaterialTheme.shapes.large, border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f)), colors = colors) { inner() }
 }
 
 @Composable
 fun Stub(top: String, big: String) {
     Text(top, style = Overline, color = MaterialTheme.colorScheme.onSurfaceVariant)
-    Text(big, fontFamily = Mono, fontWeight = FontWeight.Bold, fontSize = 20.sp, maxLines = 1)
+    Text(big, fontWeight = FontWeight.SemiBold, fontSize = 20.sp)
 }
 
 @Composable
@@ -140,8 +140,8 @@ fun InfoBox(message: String, container: Color = MaterialTheme.colorScheme.second
 
 @Composable
 fun Skeleton(rows: Int = 2, height: Int = 84) {
-    val t = rememberInfiniteTransition(label = "sk")
-    val a by t.animateFloat(0.45f, 0.9f, infiniteRepeatable(tween(900), RepeatMode.Reverse), label = "a")
+    // Static placeholder avoids constant peripheral motion and respects reduced motion.
+    val a = 0.65f
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         repeat(rows) { Box(Modifier.fillMaxWidth().height(height.dp).clip(RoundedCornerShape(20.dp)).alpha(a).background(MaterialTheme.colorScheme.surfaceContainerHigh)) }
     }
@@ -160,9 +160,10 @@ fun <T> Loaded(q: Query<T>, rows: Int = 2, height: Int = 84, content: @Composabl
 @Composable
 fun Modifier.rise(index: Int = 0): Modifier {
     var shown by remember { mutableStateOf(false) }
-    LaunchedEffect(Unit) { delay(60L * index.coerceAtMost(6)); shown = true }
+    LaunchedEffect(Unit) { shown = true }
     val p by animateFloatAsState(if (shown) 1f else 0f, spring(dampingRatio = 1f, stiffness = Spring.StiffnessMediumLow), label = "rise")
-    return this.graphicsLayer { alpha = p; translationY = (1 - p) * 24f }
+    return this.graphicsLayer { alpha = p; // Opacity-only feedback keeps large content spatially stable.
+        translationY = 0f }
 }
 
 @Composable
