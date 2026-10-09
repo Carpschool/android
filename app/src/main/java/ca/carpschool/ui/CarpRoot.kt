@@ -56,7 +56,7 @@ fun CarpRoot() {
     }
 }
 
-@Composable fun Splash() = Center { CircularProgressIndicator(color = MaterialTheme.colorScheme.secondary) }
+@Composable fun Splash() = Center { CircularProgressIndicator(color = MaterialTheme.colorScheme.primary) }
 @Composable fun Center(content: @Composable () -> Unit) = Box(Modifier.fillMaxSize().padding(24.dp), contentAlignment = Alignment.Center) { content() }
 
 private data class Tab(val route: String, val label: String, val icon: ImageVector, val sel: ImageVector)
@@ -79,11 +79,11 @@ fun AppShell(me: Me) {
         Scaffold(
             snackbarHost = { SnackbarHost(snack) },
             bottomBar = {
-                AnimatedVisibility(tabs.any { it.route == route }, enter = slideInVertically { it }, exit = slideOutVertically { it }) {
-                    NavigationBar {
+                AnimatedVisibility(tabs.any { it.route == route }, enter = fadeIn(), exit = fadeOut()) {
+                    NavigationBar(containerColor = MaterialTheme.colorScheme.surfaceContainerLow, tonalElevation = 0.dp) {
                         tabs.forEach { t ->
                             val s = route == t.route
-                            NavigationBarItem(selected = s, label = { Text(t.label) }, icon = { Icon(if (s) t.sel else t.icon, null) }, onClick = {
+                            NavigationBarItem(selected = s, label = { Text(t.label) }, icon = { Icon(if (s) t.sel else t.icon, null) }, colors = NavigationBarItemDefaults.colors(indicatorColor = MaterialTheme.colorScheme.secondaryContainer, selectedIconColor = MaterialTheme.colorScheme.primary, selectedTextColor = MaterialTheme.colorScheme.primary), onClick = {
                                 nav.navigate(t.route) { popUpTo(nav.graph.findStartDestination().id) { saveState = true }; launchSingleTop = true; restoreState = true }
                             })
                         }
@@ -92,10 +92,10 @@ fun AppShell(me: Me) {
             },
         ) { pad ->
             NavHost(nav, "home", Modifier.padding(bottom = pad.calculateBottomPadding()),
-                enterTransition = { fadeIn(tween(180)) + slideInHorizontally(tween(220)) { it / 12 } },
+                enterTransition = { fadeIn(tween(160)) },
                 exitTransition = { fadeOut(tween(120)) },
                 popEnterTransition = { fadeIn(tween(180)) },
-                popExitTransition = { fadeOut(tween(120)) + slideOutHorizontally(tween(200)) { it / 12 } }) {
+                popExitTransition = { fadeOut(tween(120)) }) {
                 composable("home") { HomeScreen(me, nav) }
                 composable("rides") { RidesScreen(me, nav) }
                 composable("chats") { ChatsScreen(me, nav) }
