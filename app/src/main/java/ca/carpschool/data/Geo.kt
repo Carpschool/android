@@ -25,6 +25,26 @@ data class Suggestion(val id: String, val main: String, val secondary: String)
 data class RouteResult(val coordinates: List<List<Double>>, val meters: Double, val seconds: Double)
 
 object Geo {
+    private var signingCertificateSha1: String? = null
+
+    fun initialize(context: Context) {
+        val certificate = if (android.os.Build.VERSION.SDK_INT >= 28) {
+            val info = context.packageManager.getPackageInfo(
+                context.packageName, android.content.pm.PackageManager.GET_SIGNING_CERTIFICATES
+            )
+            requireNotNull(info.signingInfo).apkContentsSigners.first().toByteArray()
+        } else {
+            @Suppress("DEPRECATION")
+            val info = context.packageManager.getPackageInfo(
+                context.packageName, android.content.pm.PackageManager.GET_SIGNATURES
+            )
+            @Suppress("DEPRECATION")
+            requireNotNull(info.signatures).first().toByteArray()
+        }
+        signingCertificateSha1 = java.security.MessageDigest.getInstance("SHA-1")
+            .digest(certificate).joinToString("") { "%02X".format(it.toInt() and 0xff) }
+    }
+
     private var session: AutocompleteSessionToken? = null
 
     suspend fun search(ctx: Context, q: String, bias: LatLng?): List<Suggestion> {
@@ -55,6 +75,7 @@ object Geo {
             .header("X-Goog-Api-Key", BuildConfig.MAPS_API_KEY)
             .header("X-Goog-FieldMask", "routes.distanceMeters,routes.duration,routes.polyline.encodedPolyline")
             .header("X-Android-Package", BuildConfig.APPLICATION_ID)
+            .header("X-Android-Cert", requireNotNull(signingCertificateSha1) { "Geo is not initialized" })
             .post(body.toString().toRequestBody("application/json".toMediaType()))
             .build()
         val text = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
