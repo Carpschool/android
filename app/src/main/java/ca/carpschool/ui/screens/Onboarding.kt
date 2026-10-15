@@ -39,7 +39,7 @@ fun Wordmark(color: Color = MaterialTheme.colorScheme.onSurface) {
             Icon(Icons.Outlined.DirectionsCar, null, tint = Ink, modifier = Modifier.size(17.dp))
         }
         Spacer(Modifier.width(8.dp))
-        Text("carpschool", fontWeight = FontWeight.ExtraBold, fontSize = 19.sp, letterSpacing = (-0.5).sp, color = color)
+        Text("carpschool", fontWeight = FontWeight.SemiBold, fontSize = 19.sp, letterSpacing = (-0.5).sp, color = color)
     }
 }
 
@@ -55,22 +55,23 @@ fun LandingScreen() {
                 AuthView(modifier = Modifier.fillMaxSize())
             }
         } else {
-            Box(Modifier.fillMaxSize().background(Ink)) {
-                DarkSystemBars()
-                Column(Modifier.fillMaxSize().systemBarsPadding().padding(28.dp)) {
-                    Wordmark(Paper)
-                    RouteHero(Modifier.weight(1f).fillMaxWidth())
-                    Text("TO SCHOOL · HOME · TOGETHER", style = Overline, color = Amber, modifier = Modifier.rise(0))
-                    Spacer(Modifier.height(12.dp))
-                    Text("Share the ride\nwith classmates\nwho live nearby.", style = MaterialTheme.typography.displaySmall, color = Paper, modifier = Modifier.rise(1))
+            BoxWithConstraints(Modifier.fillMaxSize().background(Color.White).systemBarsPadding().padding(24.dp)) {
+                Column(
+                    Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).heightIn(min = maxHeight),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center,
+                ) {
+                    Text("CarpSchool", fontSize = 36.sp, fontWeight = FontWeight.Bold,
+                        letterSpacing = (-0.8).sp, color = Color.Black, textAlign = TextAlign.Center)
                     Spacer(Modifier.height(16.dp))
-                    Text("Verified students only. Pickups agreed in chat, confirmed with a boarding PIN. No live tracking.",
-                        style = MaterialTheme.typography.bodyLarge, color = Paper.copy(alpha = 0.72f), modifier = Modifier.rise(2))
-                    Spacer(Modifier.height(32.dp))
-                    Button(onClick = { auth = true }, modifier = Modifier.fillMaxWidth().height(56.dp).rise(3),
-                        colors = ButtonDefaults.buttonColors(containerColor = Amber, contentColor = Ink)) {
-                        Text("Get started", style = MaterialTheme.typography.titleMedium)
-                        Spacer(Modifier.width(8.dp)); Icon(Icons.AutoMirrored.Outlined.ArrowForward, null)
+                    Text("Share rides with classmates.", fontSize = 17.sp,
+                        color = Color(0xFF6E6E73), textAlign = TextAlign.Center)
+                    Spacer(Modifier.height(24.dp))
+                    Button(onClick = { auth = true }, modifier = Modifier.heightIn(min = 48.dp),
+                        shape = CircleShape,
+                        contentPadding = PaddingValues(horizontal = 28.dp, vertical = 12.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF007AFF), contentColor = Color.White)) {
+                        Text("Sign in", fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
                     }
                 }
             }
@@ -255,8 +256,8 @@ fun DarkSystemBars() {
 /** Quiet illustration: a dashed road from home to school with two stops. */
 @Composable
 fun RouteHero(modifier: Modifier) {
-    val t = androidx.compose.animation.core.rememberInfiniteTransition(label = "hero")
-    val phase by t.animateFloat(0f, 40f, androidx.compose.animation.core.infiniteRepeatable(androidx.compose.animation.core.tween(2400, easing = androidx.compose.animation.core.LinearEasing)), label = "dash")
+    // A still route illustration does not demand attention while reading.
+    val phase = 0f
     androidx.compose.foundation.Canvas(modifier.padding(vertical = 24.dp)) {
         val w = size.width; val h = size.height
         val p = androidx.compose.ui.graphics.Path().apply {
