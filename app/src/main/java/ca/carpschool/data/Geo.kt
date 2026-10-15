@@ -70,13 +70,10 @@ object Geo {
     suspend fun route(from: List<Double>, to: List<Double>): RouteResult {
         fun wp(p: List<Double>) = buildJsonObject { putJsonObject("location") { putJsonObject("latLng") { put("latitude", p[1]); put("longitude", p[0]) } } }
         val body = buildJsonObject { put("origin", wp(from)); put("destination", wp(to)); put("travelMode", "DRIVE"); put("routingPreference", "TRAFFIC_UNAWARE"); put("polylineQuality", "HIGH_QUALITY") }
-        val req = okhttp3.Request.Builder().url("https://routes.googleapis.com/directions/v2:computeRoutes")
-            .header("X-Goog-Api-Key", BuildConfig.MAPS_API_KEY)
-            .header("X-Goog-FieldMask", "routes.distanceMeters,routes.duration,routes.polyline.encodedPolyline")
-            .header("X-Android-Package", BuildConfig.APPLICATION_ID)
-            .header("X-Android-Cert", requireNotNull(signingCertificateSha1) { "Geo is not initialized" })
-            .post(body.toString().toRequestBody("application/json".toMediaType()))
-            .build()
+        val req = routesRequest(
+            body.toString(), BuildConfig.MAPS_API_KEY, BuildConfig.APPLICATION_ID,
+            requireNotNull(signingCertificateSha1) { "Geo is not initialized" }
+        )
         val text = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
             try { Net.http.newCall(req).execute().use { if (it.isSuccessful) it.body.string() else null } } catch (e: Exception) { null }
         } ?: throw ApiError("Routing is unavailable right now", 502)
