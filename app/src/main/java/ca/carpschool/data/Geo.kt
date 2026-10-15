@@ -41,8 +41,7 @@ object Geo {
             @Suppress("DEPRECATION")
             requireNotNull(info.signatures).first().toByteArray()
         }
-        signingCertificateSha1 = java.security.MessageDigest.getInstance("SHA-1")
-            .digest(certificate).joinToString("") { "%02X".format(it.toInt() and 0xff) }
+        signingCertificateSha1 = certificateSha1Header(certificate)
     }
 
     private var session: AutocompleteSessionToken? = null
